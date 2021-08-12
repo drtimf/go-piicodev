@@ -79,3 +79,58 @@ func TestDistance(t *testing.T) {
 
 	fmt.Println("Current range:", rng)
 }
+
+
+func TestMotion(t *testing.T) {
+	var motion *MPU6050
+	var err error
+
+	if motion, err = NewMPU6050(MPU6050Address, I2CBus); err != nil {
+		t.Fatalf("Error while opening the MPU6050: %v", err)
+	}
+	defer motion.Close()
+
+	var tempC float64
+	if tempC, err = motion.ReadTemperature(); err != nil {
+		t.Fatalf("Error reading MPU6050 temperature: %v", err)
+	}
+
+	fmt.Println("Motion sensor temperature:", tempC)
+
+	if motion.SetAccelRange(MPU6050AccelRange2G); err != nil {
+		t.Fatalf("Error setting MPU6050 accelerometer range: %v", err)
+	}
+
+	var accelRange int
+	if accelRange, err = motion.GetAccelRangeValue(); err != nil {
+		t.Fatalf("Error reading MPU6050 accelerometer range: %v", err)
+	}
+
+	fmt.Println("Motion sensor accelerometer range:", accelRange)
+
+	
+	if motion.SetGyroRange(MPU6050GyroRange250Deg); err != nil {
+		t.Fatalf("Error setting MPU6050 gyro range: %v", err)
+	}
+
+	var gyroRange int
+	if gyroRange, err = motion.GetGyroRangeValue(); err != nil {
+		t.Fatalf("Error reading MPU6050 gyro range: %v", err)
+	}
+
+	fmt.Println("Motion sensor gyro range:", gyroRange)
+
+	var aX, aY, aZ float64
+	if aX, aY, aZ, err = motion.ReadAccelData(); err != nil {
+		t.Fatalf("Error reading MPU6050 accelerometer data: %v", err)
+	}
+
+	fmt.Printf("Motion sensor accelerometer data (%f,%f,%f)\n", aX, aY, aZ)
+	
+	var gX, gY, gZ float64
+	if gX, gY, gZ, err = motion.ReadGyroData(); err != nil {
+		t.Fatalf("Error reading MPU6050 gyro data: %v", err)
+	}
+
+	fmt.Printf("Motion sensor gyro data (%f,%f,%f)\n", gX, gY, gZ)
+}

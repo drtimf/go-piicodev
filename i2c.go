@@ -7,6 +7,7 @@ import (
 	"syscall"
 	"fmt"
 	"unsafe"
+	"encoding/binary"
 )
 
 const (
@@ -105,7 +106,18 @@ func (i2c *I2C) ReadRegU16BE(reg byte) (val uint16, err error) {
 		return
 	}
 
-	val = uint16(buf[0]) << 8 + uint16(buf[1])
+	val = binary.BigEndian.Uint16(buf)
+	return
+}
+
+// ReadRegS16BE reads a signed 16-bit value in big endian format from a register
+func (i2c *I2C) ReadRegS16BE(reg byte) (val int16, err error) {
+	var buf []byte
+	if buf, err = i2c.ReadReg(reg, 2); err != nil {
+		return
+	}
+
+	val = int16(binary.BigEndian.Uint16(buf))
 	return
 }
 
@@ -116,7 +128,7 @@ func (i2c *I2C) ReadRegU16LE(reg byte) (val uint16, err error) {
 		return
 	}
 
-	val = uint16(buf[1]) << 8 + uint16(buf[0])
+	val = binary.LittleEndian.Uint16(buf)
 	return
 }
 
@@ -183,7 +195,7 @@ func (i2c *I2C) ReadReg16U16BE(reg uint16) (val uint16, err error) {
 		return
 	}
 
-	val = uint16(buf[0]) << 8 + uint16(buf[1])
+	val = binary.BigEndian.Uint16(buf)
 	return
 }
 
@@ -194,7 +206,7 @@ func (i2c *I2C) ReadReg16U16LE(reg uint16) (val uint16, err error) {
 		return
 	}
 
-	val = uint16(buf[1]) << 8 + uint16(buf[0])
+	val = binary.LittleEndian.Uint16(buf)
 	return
 }
 
