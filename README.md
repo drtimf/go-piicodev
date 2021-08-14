@@ -8,6 +8,7 @@ Currently supported are the Core Electronics PiicoDev:
 * Temperature Sensor TMP117
 * Ambient Light Sensor VEML6030
 * Distance Sensor VL53L1X
+* Motion Sensor MPU-6050
 
 For example:
 ```
