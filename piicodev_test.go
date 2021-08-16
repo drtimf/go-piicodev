@@ -26,7 +26,6 @@ func TestTemperature(t *testing.T) {
 	fmt.Println("Current temperature:", tempC)
 }
 
-
 func TestPressure(t *testing.T) {
 	var pressure *MS5637
 	var err error
@@ -44,7 +43,6 @@ func TestPressure(t *testing.T) {
 	fmt.Printf("Current pressure: %.2f (%.2f)\n", pressureHpa, temperature)
 }
 
-
 func TestAmbientLight(t *testing.T) {
 	var light *VEML6030
 	var err error
@@ -54,14 +52,42 @@ func TestAmbientLight(t *testing.T) {
 	}
 	defer light.Close()
 
+	var isPowerSave bool
+	if isPowerSave, err = light.GetPowerSave(); err != nil {
+		t.Fatalf("Failed to read power save mode for VEML6030: %v", err)
+	}
+
+	fmt.Println("Ambient light sensor in power save mode:", isPowerSave)
+
+	if err = light.SetGain(VEML6030GainOne); err != nil {
+		t.Fatalf("Failed to set gain for VEML6030: %v", err)
+	}
+
+	if err = light.SetIntegrationTime(VEML6030IntegrationTime100); err != nil {
+		t.Fatalf("Failed to set integration time for VEML6030: %v", err)
+	}
+
+	var gain float64
+	if gain, err = light.GetGainValue(); err != nil {
+		t.Fatalf("Failed to read gain for VEML6030: %v", err)
+	}
+
+	fmt.Println("Ambient light sensor gain:", gain)
+
+	var integTime uint16
+	if integTime, err = light.GetIntegrationTimeValue(); err != nil {
+		t.Fatalf("Failed to read integration time for VEML6030: %v", err)
+	}
+
+	fmt.Println("Ambient light integration time(ms):", integTime)
+
 	var lightLux float64
 	if lightLux, err = light.Read(); err != nil {
 		t.Fatalf("Failed to read ambient light from VEML6030: %v", err)
 	}
 
-	fmt.Println("Ambient light:", lightLux)
+	fmt.Println("Ambient light (lux):", lightLux)
 }
-
 
 func TestDistance(t *testing.T) {
 	var dist *VL53L1X
@@ -79,7 +105,6 @@ func TestDistance(t *testing.T) {
 
 	fmt.Println("Current range:", rng)
 }
-
 
 func TestMotion(t *testing.T) {
 	var motion *MPU6050
@@ -108,7 +133,6 @@ func TestMotion(t *testing.T) {
 
 	fmt.Println("Motion sensor accelerometer range:", accelRange)
 
-	
 	if motion.SetGyroRange(MPU6050GyroRange250Deg); err != nil {
 		t.Fatalf("Error setting MPU6050 gyro range: %v", err)
 	}
@@ -126,7 +150,7 @@ func TestMotion(t *testing.T) {
 	}
 
 	fmt.Printf("Motion sensor accelerometer data (%f,%f,%f)\n", aX, aY, aZ)
-	
+
 	var gX, gY, gZ float64
 	if gX, gY, gZ, err = motion.ReadGyroData(); err != nil {
 		t.Fatalf("Error reading MPU6050 gyro data: %v", err)

@@ -2,24 +2,23 @@
 package piicodev
 
 import (
+	"encoding/binary"
+	"fmt"
 	"os"
 	"reflect"
 	"syscall"
-	"fmt"
 	"unsafe"
-	"encoding/binary"
 )
 
 const (
 	I2C_SLAVE uintptr = 0x0703
-	I2C_RDWR uintptr = 0x0707
+	I2C_RDWR  uintptr = 0x0707
 )
 
 type I2C struct {
-	dev *os.File
+	dev     *os.File
 	address uint8
 }
-
 
 type i2c_msg struct {
 	addr  uint16
@@ -33,10 +32,9 @@ type i2c_rdwr_ioctl_data struct {
 	nmsg uint32
 }
 
-
 // OpenI2C opens an I2C device at a particular address on a bus
 func OpenI2C(address uint8, bus int) (i2c *I2C, err error) {
-	i2c = &I2C{ address: address }
+	i2c = &I2C{address: address}
 
 	if i2c.dev, err = os.OpenFile(fmt.Sprintf("/dev/i2c-%d", bus), os.O_RDWR, 0600); err != nil {
 		return
@@ -44,7 +42,7 @@ func OpenI2C(address uint8, bus int) (i2c *I2C, err error) {
 
 	var errno syscall.Errno
 	if _, _, errno = syscall.Syscall(syscall.SYS_IOCTL, i2c.dev.Fd(), I2C_SLAVE, uintptr(address)); errno != 0 {
-		err = fmt.Errorf("failed to set the I2C address on bus %d: %s\n", bus, errno.Error())
+		err = fmt.Errorf("failed to set the I2C address on bus %d: %s", bus, errno.Error())
 		return
 	}
 
@@ -61,16 +59,16 @@ func (i2c *I2C) ReadReg(reg byte, length int) (val []byte, err error) {
 
 	messages := [2]i2c_msg{
 		{
-			addr: uint16(i2c.address),
+			addr:  uint16(i2c.address),
 			flags: 0,
-			len: 1,
-			buf: uintptr(unsafe.Pointer(&reg)),
+			len:   1,
+			buf:   uintptr(unsafe.Pointer(&reg)),
 		},
 		{
-			addr: uint16(i2c.address),
+			addr:  uint16(i2c.address),
 			flags: 1,
-			len: uint16(length),
-			buf: uintptrToByteSliceData(val),
+			len:   uint16(length),
+			buf:   uintptrToByteSliceData(val),
 		},
 	}
 
@@ -79,10 +77,9 @@ func (i2c *I2C) ReadReg(reg byte, length int) (val []byte, err error) {
 		nmsg: 2,
 	}
 
-	
 	var errno syscall.Errno
 	if _, _, errno = syscall.Syscall(syscall.SYS_IOCTL, i2c.dev.Fd(), I2C_RDWR, uintptr(unsafe.Pointer(&request))); errno != 0 {
-		err = fmt.Errorf("failed to read from I2C register 0x%X at address 0x%X: %s\n", reg, i2c.address, errno.Error())
+		err = fmt.Errorf("failed to read from I2C register 0x%X at address 0x%X: %s", reg, i2c.address, errno.Error())
 	}
 
 	return
@@ -139,27 +136,27 @@ func (i2c *I2C) ReadRegU24BE(reg byte) (val uint32, err error) {
 		return
 	}
 
-	val = uint32(buf[0]) << 16 + uint32(buf[1]) << 8 + uint32(buf[2])
+	val = uint32(buf[0])<<16 + uint32(buf[1])<<8 + uint32(buf[2])
 	return
 }
 
 // ReadReg16 uses the RDWR ioctl call to read from an I2C register with a 16-bit address
 func (i2c *I2C) ReadReg16(reg uint16, length int) (val []byte, err error) {
-	
+
 	val = make([]byte, length)
 
 	messages := [2]i2c_msg{
 		{
-			addr: uint16(i2c.address),
+			addr:  uint16(i2c.address),
 			flags: 0,
-			len: 2,
-			buf: uintptr(unsafe.Pointer(&([2]byte{byte((reg >> 8) & 0xFF), byte(reg & 0xFF)}))),
+			len:   2,
+			buf:   uintptr(unsafe.Pointer(&([2]byte{byte((reg >> 8) & 0xFF), byte(reg & 0xFF)}))),
 		},
 		{
-			addr: uint16(i2c.address),
+			addr:  uint16(i2c.address),
 			flags: 1,
-			len: uint16(length),
-			buf: uintptrToByteSliceData(val),
+			len:   uint16(length),
+			buf:   uintptrToByteSliceData(val),
 		},
 	}
 
@@ -168,10 +165,9 @@ func (i2c *I2C) ReadReg16(reg uint16, length int) (val []byte, err error) {
 		nmsg: 2,
 	}
 
-	
 	var errno syscall.Errno
 	if _, _, errno = syscall.Syscall(syscall.SYS_IOCTL, i2c.dev.Fd(), I2C_RDWR, uintptr(unsafe.Pointer(&request))); errno != 0 {
-		err = fmt.Errorf("failed to read from I2C register 0x%X at address 0x%X: %s\n", reg, i2c.address, errno.Error())
+		err = fmt.Errorf("failed to read from I2C register 0x%X at address 0x%X: %s", reg, i2c.address, errno.Error())
 	}
 
 	return
@@ -213,10 +209,10 @@ func (i2c *I2C) ReadReg16U16LE(reg uint16) (val uint16, err error) {
 // i2c_ioctl_rdwr_write makes a call to the ioctl RDWR with a write package and the passed data
 func (i2c *I2C) i2c_ioctl_rdwr_write(val []byte) (errno syscall.Errno) {
 	message := i2c_msg{
-		addr: uint16(i2c.address),
+		addr:  uint16(i2c.address),
 		flags: 0,
-		len: uint16(len(val)),
-		buf: uintptrToByteSliceData(val),
+		len:   uint16(len(val)),
+		buf:   uintptrToByteSliceData(val),
 	}
 
 	request := i2c_rdwr_ioctl_data{
@@ -231,7 +227,7 @@ func (i2c *I2C) i2c_ioctl_rdwr_write(val []byte) (errno syscall.Errno) {
 // Write uses the RDWR ioctl call to write
 func (i2c *I2C) Write(val []byte) (err error) {
 	if errno := i2c.i2c_ioctl_rdwr_write(val); errno != 0 {
-		err = fmt.Errorf("failed to write to I2C at address 0x%X: %s\n", i2c.address, errno.Error())
+		err = fmt.Errorf("failed to write to I2C at address 0x%X: %s", i2c.address, errno.Error())
 	}
 
 	return
@@ -248,7 +244,7 @@ func (i2c *I2C) WriteReg(reg byte, val []byte) (err error) {
 	msgbuf := append([]byte{reg}, val...)
 
 	if errno := i2c.i2c_ioctl_rdwr_write(msgbuf); errno != 0 {
-		err = fmt.Errorf("failed to write to I2C register 0x%X at address 0x%X: %s\n", reg, i2c.address, errno.Error())
+		err = fmt.Errorf("failed to write to I2C register 0x%X at address 0x%X: %s", reg, i2c.address, errno.Error())
 	}
 
 	return
@@ -277,7 +273,7 @@ func (i2c *I2C) WriteReg16(reg uint16, val []byte) (err error) {
 	msgbuf := append([]byte{byte((reg >> 8) & 0xFF), byte(reg & 0xFF)}, val...)
 
 	if errno := i2c.i2c_ioctl_rdwr_write(msgbuf); errno != 0 {
-		err = fmt.Errorf("failed to write to I2C register 0x%X at address 0x%X: %s\n", reg, i2c.address, errno.Error())
+		err = fmt.Errorf("failed to write to I2C register 0x%X at address 0x%X: %s", reg, i2c.address, errno.Error())
 	}
 
 	return

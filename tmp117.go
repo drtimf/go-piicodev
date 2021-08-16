@@ -20,7 +20,7 @@ func (t *TMP117) ReadTempC() (tempC float64, err error) {
 	}
 
 	if rawTemp >= 0x8000 {
-		tempC = -256.0 + float64(rawTemp - 0x8000) * 7.8125e-3
+		tempC = -256.0 + float64(rawTemp-0x8000)*7.8125e-3
 	} else {
 		tempC = float64(rawTemp) * 7.8125e-3
 	}
@@ -34,7 +34,7 @@ func (t *TMP117) ReadTempF() (tempF float64, err error) {
 		return
 	}
 
-	tempF = (tempC * 9.0/5.0) + 32.0
+	tempF = (tempC * 9.0 / 5.0) + 32.0
 	return
 }
 
@@ -51,5 +51,3 @@ func (t *TMP117) ReadTempK() (tempK float64, err error) {
 func (t *TMP117) Close() {
 	t.i2c.Close()
 }
-
-

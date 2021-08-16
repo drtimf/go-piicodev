@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-
 const (
 	VL53L1XAddress = 0x29
 )
@@ -68,7 +67,7 @@ var (
 		0x01, // 0x61 : NUM
 		0xf1, // 0x62 : NUM
 		0x0d, // 0x63 : NUM
-		0x01, // 0x64 : Sigma threshold MSB (mm in 14.2 format for MSB+LSB), use SetSigmaThreshold(), default value 90 mm 
+		0x01, // 0x64 : Sigma threshold MSB (mm in 14.2 format for MSB+LSB), use SetSigmaThreshold(), default value 90 mm
 		0x68, // 0x65 : Sigma threshold LSB
 		0x00, // 0x66 : Min count Rate MSB (MCPS in 9.7 format for MSB+LSB), use SetSignalThreshold()
 		0x80, // 0x67 : Min count Rate LSB
@@ -103,7 +102,7 @@ var (
 		0x00, // 0x84 : NUM
 		0x01, // 0x85 : NUM
 		0x01, // 0x86 : clear interrupt, use ClearInterrupt()
-		0x40, // 0x87 : start ranging, use StartRanging() or StopRanging(), If you want an automatic start after VL53L1X_init() call, put 0x40 in location 0x87	
+		0x40, // 0x87 : start ranging, use StartRanging() or StopRanging(), If you want an automatic start after VL53L1X_init() call, put 0x40 in location 0x87
 	}
 )
 
@@ -128,13 +127,14 @@ func NewVL53L1X(addr uint8, bus int) (d *VL53L1X, err error) {
 
 	if modelID != 0xEACC {
 		err = fmt.Errorf("model ID of VL53L1X device is 0x%X and not 0xEACC", modelID)
+		return
 	}
 
 	// Write the default configuration
 	if err = d.i2c.WriteReg16(0x2D, _VL51L1X_DEFAULT_CONFIGURATION); err != nil {
 		return
 	}
-	
+
 	time.Sleep(100 * time.Millisecond)
 
 	// the API triggers this change in VL53L1_init_and_start_range() once a
@@ -144,7 +144,7 @@ func NewVL53L1X(addr uint8, bus int) (d *VL53L1X, err error) {
 		return
 	}
 
-	if err = d.i2c.WriteReg16U16BE(0x001E, v * 4); err != nil {
+	if err = d.i2c.WriteReg16U16BE(0x001E, v*4); err != nil {
 		return
 	}
 
@@ -177,46 +177,46 @@ func (d *VL53L1X) Read() (rng uint16, err error) {
 	if data, err = d.i2c.ReadReg16(0x0089, 17); err != nil {
 		return
 	}
-	
-/*
-fmt.Println(data)
-		range_status = data[0]
-        report_status = data[1]
-        stream_count = data[2]
-        dss_actual_effective_spads_sd0 = (data[3]<<8) + data[4]
-        peak_signal_count_rate_mcps_sd0 = (data[5]<<8) + data[6]
-        ambient_count_rate_mcps_sd0 = (data[7]<<8) + data[8]
-        sigma_sd0 = (data[9]<<8) + data[10]
-        phase_sd0 = (data[11]<<8) + data[12]
-        final_crosstalk_corrected_range_mm_sd0 = (data[13]<<8) + data[14]
-        peak_signal_count_rate_crosstalk_corrected_mcps_sd0 = (data[15]<<8) + data[16]
 
-        status = None
-        if range_status in (17, 2, 1, 3):
-            status = "HardwareFail"
-        elif range_status == 13:
-            status = "MinRangeFail"
-        elif range_status == 18:
-            status = "SynchronizationInt"
-        elif range_status == 5:
-            status = "OutOfBoundsFail"
-        elif range_status == 4:
-            status = "SignalFail"
-        elif range_status == 6:
-            status = "SignalFail"
-        elif range_status == 7:
-            status = "WrapTargetFail"
-        elif range_status == 12:
-            status = "XtalkSignalFail"
-        elif range_status == 8:
-            status = "RangeValidMinRangeClipped"
-        elif range_status == 9:
-            if stream_count == 0:
-                status = "RangeValidNoWrapCheckFail"
-            else:
-                status = "OK"
-*/				
-	rng = uint16(data[13]) << 8 | uint16(data[14])
+	/*
+	   fmt.Println(data)
+	   		range_status = data[0]
+	           report_status = data[1]
+	           stream_count = data[2]
+	           dss_actual_effective_spads_sd0 = (data[3]<<8) + data[4]
+	           peak_signal_count_rate_mcps_sd0 = (data[5]<<8) + data[6]
+	           ambient_count_rate_mcps_sd0 = (data[7]<<8) + data[8]
+	           sigma_sd0 = (data[9]<<8) + data[10]
+	           phase_sd0 = (data[11]<<8) + data[12]
+	           final_crosstalk_corrected_range_mm_sd0 = (data[13]<<8) + data[14]
+	           peak_signal_count_rate_crosstalk_corrected_mcps_sd0 = (data[15]<<8) + data[16]
+
+	           status = None
+	           if range_status in (17, 2, 1, 3):
+	               status = "HardwareFail"
+	           elif range_status == 13:
+	               status = "MinRangeFail"
+	           elif range_status == 18:
+	               status = "SynchronizationInt"
+	           elif range_status == 5:
+	               status = "OutOfBoundsFail"
+	           elif range_status == 4:
+	               status = "SignalFail"
+	           elif range_status == 6:
+	               status = "SignalFail"
+	           elif range_status == 7:
+	               status = "WrapTargetFail"
+	           elif range_status == 12:
+	               status = "XtalkSignalFail"
+	           elif range_status == 8:
+	               status = "RangeValidMinRangeClipped"
+	           elif range_status == 9:
+	               if stream_count == 0:
+	                   status = "RangeValidNoWrapCheckFail"
+	               else:
+	                   status = "OK"
+	*/
+	rng = uint16(data[13])<<8 | uint16(data[14])
 	return
 }
 

@@ -29,13 +29,13 @@ const (
 	GRAVITIY_MS2 = 9.80665
 
 	// Scale Modifiers
-	ACC_SCLR_2G = 16384.0
-	ACC_SCLR_4G = 8192.0
-	ACC_SCLR_8G = 4096.0
+	ACC_SCLR_2G  = 16384.0
+	ACC_SCLR_4G  = 8192.0
+	ACC_SCLR_8G  = 4096.0
 	ACC_SCLR_16G = 2048.0
 
-	GYR_SCLR_250DEG = 131.0
-	GYR_SCLR_500DEG = 65.5
+	GYR_SCLR_250DEG  = 131.0
+	GYR_SCLR_500DEG  = 65.5
 	GYR_SCLR_1000DEG = 32.8
 	GYR_SCLR_2000DEG = 16.4
 
@@ -66,11 +66,11 @@ const (
 	GYRO_ZOUT1 = 0x48
 
 	ACCEL_CONFIG = 0x1C
-	GYRO_CONFIG = 0x1B
+	GYRO_CONFIG  = 0x1B
 )
 
 type MPU6050 struct {
-	i2c        *I2C
+	i2c *I2C
 }
 
 func NewMPU6050(addr uint8, bus int) (t *MPU6050, err error) {
@@ -96,7 +96,7 @@ func (t *MPU6050) ReadTemperature() (tempC float64, err error) {
 		return
 	}
 
-	tempC = (float64(rawTemp)/340)+36.53
+	tempC = (float64(rawTemp) / 340) + 36.53
 	return
 }
 
@@ -115,7 +115,6 @@ func (t *MPU6050) GetAccelRangeRaw() (r MPU6050AccelRange, err error) {
 	return
 }
 
-
 func (t *MPU6050) GetAccelRangeValue() (r int, err error) {
 	var rawRange MPU6050AccelRange
 	if rawRange, err = t.GetAccelRangeRaw(); err != nil {
@@ -123,10 +122,14 @@ func (t *MPU6050) GetAccelRangeValue() (r int, err error) {
 	}
 
 	switch rawRange {
-	case MPU6050AccelRange2G: r = 2
-	case MPU6050AccelRange4G: r = 4
-	case MPU6050AccelRange8G: r = 8
-	case MPU6050AccelRange16G: r = 16
+	case MPU6050AccelRange2G:
+		r = 2
+	case MPU6050AccelRange4G:
+		r = 4
+	case MPU6050AccelRange8G:
+		r = 8
+	case MPU6050AccelRange16G:
+		r = 16
 	}
 
 	return
@@ -140,10 +143,14 @@ func (t *MPU6050) ReadAccelData() (x, y, z float64, err error) {
 
 	var scaler float64
 	switch accelRange {
-	case MPU6050AccelRange2G: scaler = ACC_SCLR_2G
-	case MPU6050AccelRange4G: scaler = ACC_SCLR_4G
-	case MPU6050AccelRange8G: scaler = ACC_SCLR_8G
-	case MPU6050AccelRange16G: scaler = ACC_SCLR_16G
+	case MPU6050AccelRange2G:
+		scaler = ACC_SCLR_2G
+	case MPU6050AccelRange4G:
+		scaler = ACC_SCLR_4G
+	case MPU6050AccelRange8G:
+		scaler = ACC_SCLR_8G
+	case MPU6050AccelRange16G:
+		scaler = ACC_SCLR_16G
 	}
 
 	var aX, aY, aZ int16
@@ -159,9 +166,9 @@ func (t *MPU6050) ReadAccelData() (x, y, z float64, err error) {
 		return
 	}
 
-	x = (float64(aX) * GRAVITIY_MS2)/scaler
-	y = (float64(aY) * GRAVITIY_MS2)/scaler
-	z = (float64(aZ) * GRAVITIY_MS2)/scaler
+	x = (float64(aX) * GRAVITIY_MS2) / scaler
+	y = (float64(aY) * GRAVITIY_MS2) / scaler
+	z = (float64(aZ) * GRAVITIY_MS2) / scaler
 
 	return
 }
@@ -188,10 +195,14 @@ func (t *MPU6050) GetGyroRangeValue() (r int, err error) {
 	}
 
 	switch rawRange {
-	case MPU6050GyroRange250Deg: r = 250
-	case MPU6050GyroRange500Deg: r = 500
-	case MPU6050GyroRange1000Deg: r = 1000
-	case MPU6050GyroRange2000Deg: r = 2000
+	case MPU6050GyroRange250Deg:
+		r = 250
+	case MPU6050GyroRange500Deg:
+		r = 500
+	case MPU6050GyroRange1000Deg:
+		r = 1000
+	case MPU6050GyroRange2000Deg:
+		r = 2000
 	}
 
 	return
@@ -205,10 +216,14 @@ func (t *MPU6050) ReadGyroData() (x, y, z float64, err error) {
 
 	var scaler float64
 	switch gyroRange {
-	case MPU6050GyroRange250Deg: scaler = GYR_SCLR_250DEG
-	case MPU6050GyroRange500Deg: scaler = GYR_SCLR_500DEG
-	case MPU6050GyroRange1000Deg: scaler = GYR_SCLR_1000DEG
-	case MPU6050GyroRange2000Deg: scaler = GYR_SCLR_2000DEG
+	case MPU6050GyroRange250Deg:
+		scaler = GYR_SCLR_250DEG
+	case MPU6050GyroRange500Deg:
+		scaler = GYR_SCLR_500DEG
+	case MPU6050GyroRange1000Deg:
+		scaler = GYR_SCLR_1000DEG
+	case MPU6050GyroRange2000Deg:
+		scaler = GYR_SCLR_2000DEG
 	}
 
 	var gX, gY, gZ int16
@@ -224,17 +239,13 @@ func (t *MPU6050) ReadGyroData() (x, y, z float64, err error) {
 		return
 	}
 
-	x = float64(gX)/scaler
-	y = float64(gY)/scaler
-	z = float64(gZ)/scaler
+	x = float64(gX) / scaler
+	y = float64(gY) / scaler
+	z = float64(gZ) / scaler
 
 	return
 }
 
-
-
 func (t *MPU6050) Close() {
 	t.i2c.Close()
 }
-
-
