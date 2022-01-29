@@ -140,6 +140,35 @@ func (i2c *I2C) ReadRegU24BE(reg byte) (val uint32, err error) {
 	return
 }
 
+// ReadRegBit reads a single bit from a register
+func (i2c *I2C) ReadRegBit(reg byte, bitPos uint) (val bool, err error) {
+	var buf byte
+	if buf, err = i2c.ReadRegU8(reg); err != nil {
+		return
+	}
+
+	if ((buf >> bitPos) & 0x01) == 1 {
+		val = true
+	} else {
+		val = false
+	}
+
+	return
+}
+
+// ReadRegBits reads multiple bits from a register
+func (i2c *I2C) ReadRegBits(reg byte, bitPos uint, numBits uint) (val int, err error) {
+	var buf byte
+	if buf, err = i2c.ReadRegU8(reg); err != nil {
+		return
+	}
+
+	mask := byte((1 << numBits)-1)
+	val = int((buf >> bitPos) & mask)
+	return
+}
+
+
 // ReadReg16 uses the RDWR ioctl call to read from an I2C register with a 16-bit address
 func (i2c *I2C) ReadReg16(reg uint16, length int) (val []byte, err error) {
 
@@ -296,6 +325,38 @@ func (i2c *I2C) WriteReg16U16LE(reg uint16, val uint16) (err error) {
 	err = i2c.WriteReg16(reg, []byte{byte(val & 0xFF), byte((val >> 8) & 0xFF)})
 	return
 }
+
+// WriteRegBit reads the existing registry value and updates the bitPos with val
+func (i2c *I2C) WriteRegBit(reg byte, bitPos uint, val bool) (err error) {
+	var buf byte
+	if buf, err = i2c.ReadRegU8(reg); err != nil {
+		return
+	}
+
+	if val {
+		buf |= byte(1 << bitPos)
+	} else {
+		buf &= ^byte(1 << bitPos)
+	}
+
+	err = i2c.WriteRegU8(reg, buf)
+	return
+}
+
+// WriteRegBits reads the existing registry value and updates the numBits at bitPos with val
+func (i2c *I2C) WriteRegBits(reg byte, bitPos uint, numBits uint, val int) (err error) {
+	var buf byte
+	if buf, err = i2c.ReadRegU8(reg); err != nil {
+		return
+	}
+
+	mask := byte((1 << numBits)-1)
+	buf = (buf & ^(mask << bitPos)) | ((byte(val) & mask) << bitPos)
+
+	err = i2c.WriteRegU8(reg, buf)
+	return
+}
+
 
 // Close an I2C device
 func (i2c *I2C) Close() {
