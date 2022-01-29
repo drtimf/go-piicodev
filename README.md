@@ -9,6 +9,7 @@ Currently supported are the Core Electronics PiicoDev:
 * Ambient Light Sensor VEML6030
 * Distance Sensor VL53L1X
 * Motion Sensor MPU-6050
+* Capacitive Touch Sensor CAP1203
 
 For example:
 ```
