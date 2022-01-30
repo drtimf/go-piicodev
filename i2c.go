@@ -163,11 +163,10 @@ func (i2c *I2C) ReadRegBits(reg byte, bitPos uint, numBits uint) (val int, err e
 		return
 	}
 
-	mask := byte((1 << numBits)-1)
+	mask := byte((1 << numBits) - 1)
 	val = int((buf >> bitPos) & mask)
 	return
 }
-
 
 // ReadReg16 uses the RDWR ioctl call to read from an I2C register with a 16-bit address
 func (i2c *I2C) ReadReg16(reg uint16, length int) (val []byte, err error) {
@@ -350,13 +349,12 @@ func (i2c *I2C) WriteRegBits(reg byte, bitPos uint, numBits uint, val int) (err 
 		return
 	}
 
-	mask := byte((1 << numBits)-1)
+	mask := byte((1 << numBits) - 1)
 	buf = (buf & ^(mask << bitPos)) | ((byte(val) & mask) << bitPos)
 
 	err = i2c.WriteRegU8(reg, buf)
 	return
 }
-
 
 // Close an I2C device
 func (i2c *I2C) Close() {

@@ -2,8 +2,8 @@ package piicodev
 
 import (
 	"fmt"
-	"time"
 	"testing"
+	"time"
 )
 
 const (
