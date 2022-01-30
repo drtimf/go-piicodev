@@ -2,6 +2,7 @@ package piicodev
 
 import (
 	"fmt"
+	"time"
 	"testing"
 )
 
@@ -16,6 +17,7 @@ const (
 	EnableTestDistance = true
 	EnableTestMotion = true
 	EnableTestCapacitiveTouch = true
+	EnableTestRGBLED = true
 )
 
 func TestTemperature(t *testing.T) {
@@ -241,6 +243,76 @@ func TestCapacitiveTouch(t *testing.T) {
 		}
 
 		fmt.Printf("Capacitive touch sensor status: %t %t %t\n", status1, status2, status3)
+	}
+}
+
+func TestRGBLED(t *testing.T) {
+	if EnableTestRGBLED {
+		var led *RGBLED
+		var err error
+
+		if led, err = NewRGBLED(RGBLEDAddress, I2CBus); err != nil {
+			t.Fatalf("Error while opening the RGBLED: %v", err)
+		}
+		defer led.Close()
+
+		/* Bug in firmware??  Cannot read anything :(
+		var deviceID byte
+		if deviceID, err = led.GetDeviceID(); err != nil {
+			t.Fatalf("Error reading device ID of the RGBLED: %v", err)
+		}
+
+		fmt.Printf("RGB LED device ID: %x\n", deviceID)
+
+		var firmwareVersion uint16
+		if firmwareVersion, err = led.GetFirmwareVersion(); err != nil {
+			t.Fatalf("Error reading firmware version of the RGBLED: %v", err)
+		}
+
+		fmt.Printf("RGB LED firmware version: %d\n", firmwareVersion)
+		*/
+
+		// Flash each LED red, green and blue in turn at three different brightness levels
+		// Flash the power LED as well
+		for i := 0; i < 6*3; i++ {
+			if i != 0 {
+				time.Sleep(150 * time.Millisecond)
+			}
+
+			switch (i/6)%3 {
+				case 0: led.SetBrightness(255)
+				case 1: led.SetBrightness(50)
+				case 2: led.SetBrightness(5)
+			}
+
+			led.ClearPixels()
+			switch (i/2)%3 {
+				case 0: led.SetPixel(0, 255, 0, 0)
+				case 1: led.SetPixel(1, 0, 255, 0)
+				case 2: led.SetPixel(2, 0, 0, 255)
+			}
+
+			state := true
+			if i % 2 == 0 {
+				state = false
+			}
+
+			if err = led.EnablePowerLED(state); err != nil {
+				t.Fatalf("Error setting RGBLED power LED: %v", err)
+			}
+
+			if err = led.Show(); err != nil {
+				t.Fatalf("Error setting RGBLED values: %v", err)
+			}
+		}
+
+		if err = led.Clear(); err != nil {
+				t.Fatalf("Error clearing RGBLED values: %v", err)
+		}
+
+		if err = led.EnablePowerLED(false); err != nil {
+			t.Fatalf("Error setting RGBLED power LED: %v", err)
+		}
 	}
 }
 

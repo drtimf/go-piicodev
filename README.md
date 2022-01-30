@@ -10,6 +10,7 @@ Currently supported are the Core Electronics PiicoDev:
 * Distance Sensor VL53L1X
 * Motion Sensor MPU-6050
 * Capacitive Touch Sensor CAP1203
+* 3 x RGB LED
 
 For example:
 ```
