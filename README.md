@@ -1,18 +1,22 @@
 # go-piicodev
+
 A Go implementation of the Core Electronics PiicoDev drivers
 
-The company, Core Electronics (https://core-electronics.com.au/), produce a set of products called PiicoDev.  They supply a set of drivers written in Python (https://github.com/CoreElectronics).  This is a port of those drivers to Go for the Raspberry Pi.
+The company, Core Electronics (https://core-electronics.com.au/), produce a set of products called PiicoDev. They supply a set of drivers written in Python (https://github.com/CoreElectronics). This is a port of those drivers to Go for the Raspberry Pi.
 
 Currently supported are the Core Electronics PiicoDev:
-* Pressure Seneor MS5637
-* Temperature Sensor TMP117
-* Ambient Light Sensor VEML6030
-* Distance Sensor VL53L1X
-* Motion Sensor MPU-6050
-* Capacitive Touch Sensor CAP1203
-* 3 x RGB LED
+
+- Pressure Seneor MS5637
+- Temperature Sensor TMP117
+- Ambient Light Sensor VEML6030
+- Distance Sensor VL53L1X
+- Motion Sensor MPU-6050
+- Capacitive Touch Sensor CAP1203
+- 3 x RGB LED
+- Buzzer
 
 For example:
+
 ```
 package main
 
@@ -41,4 +45,3 @@ func main() {
 	fmt.Println("Current temperature:", tempC)
 }
 ```
-

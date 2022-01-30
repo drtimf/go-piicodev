@@ -11,13 +11,14 @@ const (
 	I2CBus = 1
 
 	// Enable different tests
-	EnableTestTemperature = true
-	EnableTestPressure = true
-	EnableTestAmbientLight = true
-	EnableTestDistance = true
-	EnableTestMotion = true
+	EnableTestTemperature     = true
+	EnableTestPressure        = true
+	EnableTestAmbientLight    = true
+	EnableTestDistance        = true
+	EnableTestMotion          = true
 	EnableTestCapacitiveTouch = true
-	EnableTestRGBLED = true
+	EnableTestRGBLED          = true
+	EnableTestBuzzer          = true
 )
 
 func TestTemperature(t *testing.T) {
@@ -279,21 +280,27 @@ func TestRGBLED(t *testing.T) {
 				time.Sleep(150 * time.Millisecond)
 			}
 
-			switch (i/6)%3 {
-				case 0: led.SetBrightness(255)
-				case 1: led.SetBrightness(50)
-				case 2: led.SetBrightness(5)
+			switch (i / 6) % 3 {
+			case 0:
+				led.SetBrightness(255)
+			case 1:
+				led.SetBrightness(50)
+			case 2:
+				led.SetBrightness(5)
 			}
 
 			led.ClearPixels()
-			switch (i/2)%3 {
-				case 0: led.SetPixel(0, 255, 0, 0)
-				case 1: led.SetPixel(1, 0, 255, 0)
-				case 2: led.SetPixel(2, 0, 0, 255)
+			switch (i / 2) % 3 {
+			case 0:
+				led.SetPixel(0, 255, 0, 0)
+			case 1:
+				led.SetPixel(1, 0, 255, 0)
+			case 2:
+				led.SetPixel(2, 0, 0, 255)
 			}
 
 			state := true
-			if i % 2 == 0 {
+			if i%2 == 0 {
 				state = false
 			}
 
@@ -307,7 +314,7 @@ func TestRGBLED(t *testing.T) {
 		}
 
 		if err = led.Clear(); err != nil {
-				t.Fatalf("Error clearing RGBLED values: %v", err)
+			t.Fatalf("Error clearing RGBLED values: %v", err)
 		}
 
 		if err = led.EnablePowerLED(false); err != nil {
@@ -316,3 +323,62 @@ func TestRGBLED(t *testing.T) {
 	}
 }
 
+func TestBuzzer(t *testing.T) {
+	if EnableTestBuzzer {
+		var b *Buzzer
+		var err error
+
+		if b, err = NewBuzzer(BuzzerAddress, I2CBus); err != nil {
+			t.Fatalf("Error while opening the Buzzer: %v", err)
+		}
+		defer b.Close()
+
+		var deviceID byte
+		if deviceID, err = b.GetDeviceID(); err != nil {
+			t.Fatalf("Error reading device ID of the Buzzer: %v", err)
+		}
+
+		fmt.Printf("Buzzer device ID: 0x%x\n", deviceID)
+
+		var firmwareVersion [2]byte
+		if firmwareVersion, err = b.GetFirmwareVersion(); err != nil {
+			t.Fatalf("Error reading firmware version of the Buzzer: %v", err)
+		}
+
+		fmt.Printf("Buzzer firmware version: %v\n", firmwareVersion)
+
+		// Flash power led, alternate tones at the three different volume levels
+		for i := 0; i < 6*3; i++ {
+			if i != 0 {
+				time.Sleep(150 * time.Millisecond)
+			}
+
+			if err = b.SetVolume(i / 6); err != nil {
+				t.Fatalf("Error setting the volume of the Buzzer: %v", err)
+			}
+
+			tone := uint16(800)
+			state := true
+			if i%2 == 0 {
+				tone = 500
+				state = false
+			}
+
+			if err = b.EnablePowerLED(state); err != nil {
+				t.Fatalf("Error setting the power LED of the Buzzer: %v", err)
+			}
+
+			if err = b.SetTone(tone, 0); err != nil {
+				t.Fatalf("Error setting the tone of the Buzzer: %v", err)
+			}
+		}
+
+		if err = b.NoTone(); err != nil {
+			t.Fatalf("Error turning off the Buzzer: %v", err)
+		}
+
+		if err = b.EnablePowerLED(false); err != nil {
+			t.Fatalf("Error setting the power LED of the Buzzer: %v", err)
+		}
+	}
+}
