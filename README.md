@@ -9,6 +9,7 @@ Currently supported are the Core Electronics PiicoDev:
 - Pressure Seneor MS5637
 - Temperature Sensor TMP117
 - Ambient Light Sensor VEML6030
+- Colour Sensor VEML6040
 - Distance Sensor VL53L1X
 - Motion Sensor MPU-6050
 - Capacitive Touch Sensor CAP1203

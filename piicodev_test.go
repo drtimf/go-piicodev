@@ -19,6 +19,10 @@ const (
 	EnableTestCapacitiveTouch = true
 	EnableTestRGBLED          = true
 	EnableTestBuzzer          = true
+	EnableTestColour          = true
+
+	// Fun...
+	EnableTestColourSensorToRGBLED = false
 )
 
 func TestTemperature(t *testing.T) {
@@ -379,6 +383,70 @@ func TestBuzzer(t *testing.T) {
 
 		if err = b.EnablePowerLED(false); err != nil {
 			t.Fatalf("Error setting the power LED of the Buzzer: %v", err)
+		}
+	}
+}
+
+func TestColour(t *testing.T) {
+	if EnableTestColour {
+		var c *VEML6040
+		var err error
+
+		if c, err = NewVEML6040(VEML6040Address, I2CBus); err != nil {
+			t.Fatalf("Error while opening the VEML6040: %v", err)
+		}
+		defer c.Close()
+
+		for i := 0; i < 10; i++ {
+			if i > 0 {
+				time.Sleep(100 * time.Millisecond)
+			}
+
+			var red, green, blue, white uint16
+			if red, green, blue, white, err = c.ReadRGBW(); err != nil {
+				t.Fatalf("Error reading RGBW values from VEML6040: %v", err)
+			}
+
+			cct := CalculateCCT(red, green, blue)
+			hue, saturation, value := CalculateHSV(red, green, blue)
+			fmt.Printf("(%d, %d, %d) %d %f (%f, %f, %f)\n", red, green, blue, white, cct, hue, saturation, value)
+		}
+	}
+}
+
+func TestColourSensorToRGBLED(t *testing.T) {
+	if EnableTestColourSensorToRGBLED {
+		var err error
+
+		var c *VEML6040
+		if c, err = NewVEML6040(VEML6040Address, I2CBus); err != nil {
+			t.Fatalf("Error while opening the VEML6040: %v", err)
+		}
+		defer c.Close()
+
+		var led *RGBLED
+		if led, err = NewRGBLED(RGBLEDAddress, I2CBus); err != nil {
+			t.Fatalf("Error while opening the RGBLED: %v", err)
+		}
+		defer led.Close()
+
+		led.SetBrightness(120)
+
+		for true {
+			var red, green, blue uint16
+			if red, green, blue, _, err = c.ReadRGBW(); err != nil {
+				t.Fatalf("Error reading RGBW values from VEML6040: %v", err)
+			}
+
+			scale := 2.0
+			rb := byte((float64(red) * 256.0 * scale) / 65535.0)
+			gb := byte((float64(green) * 256.0 * scale) / 65535.0)
+			bb := byte((float64(blue) * 256.0 * scale) / 65535.0)
+			led.FillPixels(rb, gb, bb)
+			led.Show()
+
+			fmt.Printf("(%d, %d, %d)\n", rb, gb, bb)
+			time.Sleep(50 * time.Millisecond)
 		}
 	}
 }
