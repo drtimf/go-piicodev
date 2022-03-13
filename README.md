@@ -16,6 +16,10 @@ Currently supported are the Core Electronics PiicoDev:
 - 3 x RGB LED
 - Buzzer
 
+Now adding other I2C devices
+
+- Qwiic PIR Sensor
+
 For example:
 
 ```

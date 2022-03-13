@@ -140,6 +140,17 @@ func (i2c *I2C) ReadRegU24BE(reg byte) (val uint32, err error) {
 	return
 }
 
+// ReadRegU32LE reads an unsigned 32-bit value in little endian format from a register
+func (i2c *I2C) ReadRegU32LE(reg byte) (val uint32, err error) {
+	var buf []byte
+	if buf, err = i2c.ReadReg(reg, 4); err != nil {
+		return
+	}
+
+	val = binary.LittleEndian.Uint32(buf)
+	return
+}
+
 // ReadRegBit reads a single bit from a register
 func (i2c *I2C) ReadRegBit(reg byte, bitPos uint) (val bool, err error) {
 	var buf byte
