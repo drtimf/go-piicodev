@@ -20,6 +20,7 @@ const (
 	EnableTestRGBLED          = true
 	EnableTestBuzzer          = true
 	EnableTestColour          = true
+	EnableAirQualitySensor    = true
 
 	// Fun...
 	EnableTestColourSensorToRGBLED = false
@@ -447,6 +448,51 @@ func TestColourSensorToRGBLED(t *testing.T) {
 
 			fmt.Printf("(%d, %d, %d)\n", rb, gb, bb)
 			time.Sleep(50 * time.Millisecond)
+		}
+	}
+}
+
+func TestEnableAirQualitySensor(t *testing.T) {
+	if EnableAirQualitySensor {
+		var err error
+
+		var s *ENS160
+		if s, err = NewENS160(ENS160Address, I2CBus); err != nil {
+			t.Fatalf("Error while opening the ENS160: %v", err)
+		}
+		defer s.Close()
+
+		for i := 0; i < 5; i++ {
+			var status byte
+			if status, err = s.GetStatus(); err != nil {
+				t.Fatalf("Error reading status from ENS160: %v", err)
+			}
+
+			var operation string
+			if operation, err = s.GetOperation(); err != nil {
+				t.Fatalf("Error reading operation from ENS160: %v", err)
+			}
+
+			var aqi byte
+			var aqiRating string
+			if aqi, aqiRating, err = s.ReadAQI(); err != nil {
+				t.Fatalf("Error reading AQI from ENS160: %v", err)
+			}
+
+			var tvoc uint16
+			if tvoc, err = s.ReadTVOC(); err != nil {
+				t.Fatalf("Error reading TVOC from ENS160: %v", err)
+			}
+
+			var eco2 uint16
+			var eco2Rating string
+			if eco2, eco2Rating, err = s.ReadECO2(); err != nil {
+				t.Fatalf("Error reading ECO2 from ENS160: %v", err)
+			}
+
+			fmt.Printf("--------------------------------\n    flag: %x\n     AQI: %d [%s]\n    TVOC: %d\n    eCO2: %d ppm [%s]\n  Status: %s\n",
+				status, aqi, aqiRating, tvoc, eco2, eco2Rating, operation)
+			time.Sleep(1000 * time.Millisecond)
 		}
 	}
 }
