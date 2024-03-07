@@ -1,4 +1,4 @@
-// Core Electronics PiicoDev Air Quality Sensor EBS160
+// Core Electronics PiicoDev Air Quality Sensor ENS160
 package piicodev
 
 import (
@@ -55,7 +55,7 @@ func NewENS160(addr uint8, bus int) (s *ENS160, err error) {
 		return
 	}
 
-	// REVISIT
+	// REVISIT - inten/intdat/intgpr
 	s.config = 0
 
 	var part_id uint16
@@ -64,7 +64,7 @@ func NewENS160(addr uint8, bus int) (s *ENS160, err error) {
 	}
 
 	if part_id != _VAL_PART_ID {
-		err = fmt.Errorf("part ID read from ENS160 is %d rather than %d", part_id, _VAL_PART_ID)
+		err = fmt.Errorf("part ID read from ENS160 is 0x%x rather than 0x%x", part_id, _VAL_PART_ID)
 		return
 	}
 
@@ -108,13 +108,33 @@ func (s *ENS160) readData() (err error) {
 	return
 }
 
+func (s *ENS160) SetTemperature(temperature float64) (err error) {
+	err = s.i2c.WriteRegU16LE(_REG_TEMP_IN, uint16(((temperature+273.15)*64.0)+0.5))
+	return
+}
+
 func (s *ENS160) GetTemperature() (temperature float64, err error) {
 	var t uint16
-	if t, err = s.i2c.ReadRegU16LE(_REG_TEMP_IN); err != nil {
+	if t, err = s.i2c.ReadRegU16LE(_REG_DATA_T); err != nil {
 		return
 	}
 
 	temperature = (float64(t) / 64.0) - 273.15
+	return
+}
+
+func (s *ENS160) SetHumidity(humidity float64) (err error) {
+	err = s.i2c.WriteRegU16LE(_REG_RH_IN, uint16((humidity*512.0)+0.5))
+	return
+}
+
+func (s *ENS160) GetHumidity() (humidity float64, err error) {
+	var t uint16
+	if t, err = s.i2c.ReadRegU16LE(_REG_DATA_RH); err != nil {
+		return
+	}
+
+	humidity = float64(t) / 512.0
 	return
 }
 
@@ -210,4 +230,3 @@ func (s *ENS160) ReadECO2() (eco2 uint16, rating string, err error) {
 func (s *ENS160) Close() {
 	s.i2c.Close()
 }
-

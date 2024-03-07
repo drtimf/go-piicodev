@@ -462,6 +462,30 @@ func TestEnableAirQualitySensor(t *testing.T) {
 		}
 		defer s.Close()
 
+		if err = s.SetTemperature(22.5); err != nil {
+			t.Fatalf("Error setting temperature for ENS160: %v", err)
+		}
+
+		time.Sleep(20 * time.Millisecond)
+
+		var temperature float64
+		if temperature, err = s.GetTemperature(); err != nil {
+			t.Fatalf("Error reading temperature from ENS160: %v", err)
+		}
+		fmt.Printf("%f\n", temperature)
+
+		if err = s.SetHumidity(40); err != nil {
+			t.Fatalf("Error setting humidity for ENS160: %v", err)
+		}
+
+		time.Sleep(20 * time.Millisecond)
+
+		var humidity float64
+		if humidity, err = s.GetHumidity(); err != nil {
+			t.Fatalf("Error reading humidity from ENS160: %v", err)
+		}
+		fmt.Printf("%f\n", humidity)
+
 		for i := 0; i < 5; i++ {
 			var status byte
 			if status, err = s.GetStatus(); err != nil {

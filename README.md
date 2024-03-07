@@ -15,6 +15,7 @@ Currently supported are the Core Electronics PiicoDev:
 - Capacitive Touch Sensor CAP1203
 - 3 x RGB LED
 - Buzzer
+- Air Quality Sensor ENS160
 
 Now adding other I2C devices
 
