@@ -13,9 +13,11 @@ Currently supported are the Core Electronics PiicoDev:
 - Distance Sensor VL53L1X
 - Motion Sensor MPU-6050
 - Capacitive Touch Sensor CAP1203
+- Air Quality Sensor ENS160
 - 3 x RGB LED
 - Buzzer
-- Air Quality Sensor ENS160
+- Potentiometer
+- Switch
 
 Now adding other I2C devices
 

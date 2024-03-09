@@ -21,6 +21,8 @@ const (
 	EnableTestBuzzer          = true
 	EnableTestColour          = true
 	EnableAirQualitySensor    = true
+	EnablePotentiometer       = true
+	EnableSwitch              = true
 
 	// Fun...
 	EnableTestColourSensorToRGBLED = false
@@ -40,7 +42,7 @@ func TestTemperature(t *testing.T) {
 			t.Fatalf("Failed to read temperature from TMP117: %v", err)
 		}
 
-		fmt.Println("Current temperature:", tempC)
+		fmt.Println("TMP117 Current temperature:", tempC)
 	}
 }
 
@@ -59,7 +61,7 @@ func TestPressure(t *testing.T) {
 			t.Fatalf("Failed to read pressure and temperature from MS5637: %v", err)
 		}
 
-		fmt.Printf("Current pressure: %.2f (%.2f)\n", pressureHpa, temperature)
+		fmt.Printf("MS5637 Current pressure: %.2f (%.2f)\n", pressureHpa, temperature)
 	}
 }
 
@@ -415,6 +417,8 @@ func TestColour(t *testing.T) {
 	}
 }
 
+// Using both a PiicoDev colour sensor and the RGB led.
+// Show the colour seen by the colour sensor on the RGB leds
 func TestColourSensorToRGBLED(t *testing.T) {
 	if EnableTestColourSensorToRGBLED {
 		var err error
@@ -452,7 +456,7 @@ func TestColourSensorToRGBLED(t *testing.T) {
 	}
 }
 
-func TestEnableAirQualitySensor(t *testing.T) {
+func TestAirQualitySensor(t *testing.T) {
 	if EnableAirQualitySensor {
 		var err error
 
@@ -514,9 +518,229 @@ func TestEnableAirQualitySensor(t *testing.T) {
 				t.Fatalf("Error reading ECO2 from ENS160: %v", err)
 			}
 
-			fmt.Printf("--------------------------------\n    flag: %x\n     AQI: %d [%s]\n    TVOC: %d\n    eCO2: %d ppm [%s]\n  Status: %s\n",
+			fmt.Printf("-------------------------------- ENS160\n    flag: %x\n     AQI: %d [%s]\n    TVOC: %d\n    eCO2: %d ppm [%s]\n  Status: %s\n",
 				status, aqi, aqiRating, tvoc, eco2, eco2Rating, operation)
 			time.Sleep(1000 * time.Millisecond)
+		}
+	}
+}
+
+func TestPotentiometer(t *testing.T) {
+	if EnablePotentiometer {
+		var err error
+
+		var s *Potentiometer
+		if s, err = NewPotentiometer(PotentiometerAddress, I2CBus); err != nil {
+			t.Fatalf("Error while opening the Potentiometer: %v", err)
+		}
+		defer s.Close()
+
+		fmt.Println("Potentiometer type:", s.GetType())
+
+		var major, minor uint8
+		if major, minor, err = s.ReadFirmwareVersion(); err != nil {
+			t.Fatalf("Error reading firmware version from potentiometer: %v", err)
+		}
+
+		fmt.Printf("Potentiometer firmware version: %d.%d\n", major, minor)
+
+		var selfTest uint8
+		if selfTest, err = s.SelfTest(); err != nil {
+			t.Fatalf("Error performing self test of potentiometer: %v", err)
+		}
+
+		fmt.Println("Potentiometer self test result:", selfTest)
+
+		var led uint8
+		if led, err = s.GetLED(); err != nil {
+			t.Fatalf("Error reading LED from potentiometer: %v", err)
+		}
+
+		fmt.Println("Potentiometer LED:", led)
+
+		if err = s.SetLED(false); err != nil {
+			t.Fatalf("Error setting LED on potentiometer: %v", err)
+		}
+
+		if led, err = s.GetLED(); err != nil {
+			t.Fatalf("Error reading LED from potentiometer: %v", err)
+		}
+
+		if led != 0 {
+			t.Fatalf("Error LED on potentiometer should be off")
+		}
+
+		var potRawValue uint16
+		if potRawValue, err = s.ReadRawValue(); err != nil {
+			t.Fatalf("Error reading raw value from potentiometer: %v", err)
+		}
+
+		fmt.Println("Potentiometer raw value:", potRawValue)
+
+		var potValue float64
+		if potValue, err = s.ReadValue(); err != nil {
+			t.Fatalf("Error reading value from potentiometer: %v", err)
+		}
+
+		fmt.Println("Potentiometer value:", potValue)
+
+		fmt.Println("----- Potentiometer activity test")
+		for i := 0; i < 10; i++ {
+			var newPotRawValue uint16
+			if newPotRawValue, err = s.ReadRawValue(); err != nil {
+				t.Fatalf("Error reading raw value from potentiometer: %v", err)
+			}
+
+			if newPotRawValue&(^uint16(7)) != potRawValue&(^uint16(7)) {
+				potRawValue = newPotRawValue
+				fmt.Println("Potentiometer raw value:", potRawValue)
+			}
+
+			time.Sleep(500 * time.Millisecond)
+		}
+	}
+}
+
+func TestSwitch(t *testing.T) {
+	if EnableSwitch {
+		var err error
+
+		var s *Switch
+		if s, err = NewSwitch(SwitchAddress, I2CBus); err != nil {
+			t.Fatalf("Error while opening the Switch: %v", err)
+		}
+		defer s.Close()
+
+		var major, minor uint8
+		if major, minor, err = s.ReadFirmwareVersion(); err != nil {
+			t.Fatalf("Error reading firmware version from switch: %v", err)
+		}
+
+		fmt.Printf("Switch firmware version: %d.%d\n", major, minor)
+
+		var led uint8
+		if led, err = s.GetLED(); err != nil {
+			t.Fatalf("Error reading LED from switch: %v", err)
+		}
+
+		fmt.Println("Switch LED:", led)
+
+		if err = s.SetLED(false); err != nil {
+			t.Fatalf("Error setting LED on switch: %v", err)
+		}
+
+		if led, err = s.GetLED(); err != nil {
+			t.Fatalf("Error reading LED from switch: %v", err)
+		}
+
+		if led != 0 {
+			t.Fatalf("Error LED on switch should be off")
+		}
+
+		var doublePressDuration uint16
+		if doublePressDuration, err = s.GetDoublePressDuration(); err != nil {
+			t.Fatalf("Error reading double press duration from switch: %v", err)
+		}
+
+		fmt.Println("Switch double press duration:", doublePressDuration)
+
+		if err = s.SetDoublePressDuration(350); err != nil {
+			t.Fatalf("Error setting double press duration from switch: %v", err)
+		}
+
+		if doublePressDuration, err = s.GetDoublePressDuration(); err != nil {
+			t.Fatalf("Error reading double press duration from switch: %v", err)
+		}
+
+		if doublePressDuration != 350 {
+			t.Fatalf("Error the double press duration of the switch should be 350 and not %d", doublePressDuration)
+		}
+
+		var emaParameter, emaPeriod uint8
+		if emaParameter, emaPeriod, err = s.GetDebounceEMAParameters(); err != nil {
+			t.Fatalf("Error reading debounce EMA parameters from switch: %v", err)
+		}
+
+		fmt.Printf("Debounce EMA parameters: parameter %d, period %d\n", emaParameter, emaPeriod)
+
+		if err = s.SetDebounceEMAParameters(65, 25); err != nil {
+			t.Fatalf("Error setting debounce EMA parameters for switch: %v", err)
+		}
+
+		if emaParameter, emaPeriod, err = s.GetDebounceEMAParameters(); err != nil {
+			t.Fatalf("Error reading debounce EMA parameters from switch: %v", err)
+		}
+
+		if emaParameter != 65 {
+			t.Fatalf("Error the debounce EMA parameter for the switch should be 65 and not %d", emaParameter)
+		}
+
+		if emaPeriod != 25 {
+			t.Fatalf("Error the debounce EMA period for the switch should be 25 and not %d", emaPeriod)
+		}
+
+		var pressCount int
+		if pressCount, err = s.GetPressCount(); err != nil {
+			t.Fatalf("Error reading press count from switch: %v", err)
+		}
+
+		fmt.Println("Switch press count:", pressCount)
+
+		var isPressed bool
+		if isPressed, err = s.IsPressed(); err != nil {
+			t.Fatalf("Error reading is pressed status from switch: %v", err)
+		}
+
+		fmt.Println("Switch is pressed?:", isPressed)
+
+		var wasPressed bool
+		if wasPressed, err = s.WasPressed(); err != nil {
+			t.Fatalf("Error reading was pressed status from switch: %v", err)
+		}
+
+		fmt.Println("Switch was pressed?:", wasPressed)
+
+		var wasDoublePressed bool
+		if wasDoublePressed, err = s.WasDoublePressed(); err != nil {
+			t.Fatalf("Error reading double pressed status from switch: %v", err)
+		}
+
+		fmt.Println("Switch was double pressed?:", wasDoublePressed)
+
+		fmt.Println("----- Switch activity test")
+		for i := 0; i < 10; i++ {
+			if isPressed, err = s.IsPressed(); err != nil {
+				t.Fatalf("Error reading is pressed status from switch: %v", err)
+			}
+
+			if wasPressed, err = s.WasPressed(); err != nil {
+				t.Fatalf("Error reading was pressed status from switch: %v", err)
+			}
+
+			if wasDoublePressed, err = s.WasDoublePressed(); err != nil {
+				t.Fatalf("Error reading double pressed status from switch: %v", err)
+			}
+
+			if pressCount, err = s.GetPressCount(); err != nil {
+				t.Fatalf("Error reading press count from switch: %v", err)
+			}
+
+			if isPressed {
+				fmt.Println("Switch is pressed")
+			} else {
+				if wasDoublePressed {
+					fmt.Println("Switch was double pressed")
+				} else if wasPressed {
+					fmt.Println("Switch was pressed")
+				}
+
+			}
+
+			if pressCount > 0 {
+				fmt.Println("Switch press count:", pressCount)
+			}
+
+			time.Sleep(500 * time.Millisecond)
 		}
 	}
 }
