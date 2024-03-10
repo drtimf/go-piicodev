@@ -22,6 +22,8 @@ Currently supported are the Core Electronics PiicoDev:
 Now adding other I2C devices
 
 - Qwiic PIR Sensor
+- AHT10 Temperature and humidity sensor
+- LM75a Temperature sensor and thermal watchdog
 
 For example:
 

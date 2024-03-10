@@ -8,6 +8,8 @@ import (
 
 const (
 	EnableTestQwiicPIR = true
+	EnableTestAHT10    = true
+	EnableTestLM75A    = true
 )
 
 func TestQwiicPIR(t *testing.T) {
@@ -93,5 +95,51 @@ func TestQwiicPIR(t *testing.T) {
 				}
 			}
 		}
+	}
+}
+
+func TestAHT10(t *testing.T) {
+	if EnableTestAHT10 {
+		var err error
+
+		var s *AHT10
+		if s, err = NewAHT10(AHT10Address, I2CBus); err != nil {
+			t.Fatalf("Error while opening the AHT10: %v", err)
+		}
+
+		for i := 0; i < 10; i++ {
+			var humidity, temperature float64
+			if temperature, humidity, err = s.ReadSensor(); err != nil {
+				t.Fatalf("Error reading sensor valyes from a AHT10: %v", err)
+			}
+
+			fmt.Printf("%.4f %%, %.4f C\n", humidity, temperature)
+			time.Sleep(100 * time.Millisecond)
+		}
+
+		defer s.Close()
+	}
+}
+
+func TestLM75A(t *testing.T) {
+	if EnableTestLM75A {
+		var err error
+
+		var s *LM75A
+		if s, err = NewLM75A(LM75AAddress, I2CBus); err != nil {
+			t.Fatalf("Error while opening the LM75A: %v", err)
+		}
+
+		for i := 0; i < 10; i++ {
+			var temperature float64
+			if temperature, err = s.ReadTemperature(); err != nil {
+				t.Fatalf("Error reading sensor valyes from a LM75A: %v", err)
+			}
+
+			fmt.Printf("%.4f C\n", temperature)
+			time.Sleep(100 * time.Millisecond)
+		}
+
+		defer s.Close()
 	}
 }
